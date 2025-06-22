@@ -41,7 +41,7 @@ pip install yt-dlp
       "command": "npx",
       "args": [
         "-y",
-        "@sanchorelaxo/yt-search"
+        "github:sanchorelaxo/yt-search"
       ]
     }
   }
@@ -66,7 +66,7 @@ To use the YouTube search features (`search_youtube` and `search_and_download_to
       "command": "npx",
       "args": [
         "-y",
-        "@sanchorelaxo/yt-search"
+        "github:sanchorelaxo/yt-search"
       ],
       "env": {
         "YOUTUBE_API_KEY": "your-api-key-here"
@@ -139,7 +139,7 @@ Ask your LLM to:
 
 If needed, start the server manually:
 ```bash
-npx @sanchorelaxo/yt-search
+npx github:sanchorelaxo/yt-search
 ```
 
 ## Requirements

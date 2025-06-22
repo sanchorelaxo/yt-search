@@ -1,7 +1,7 @@
 {
-  "name": "@kevinwatt/yt-dlp-mcp",
-  "version": "0.6.26",
-  "description": "An MCP server implementation that integrates with yt-dlp, providing video and audio content download capabilities (e.g. YouTube, Facebook, Tiktok, etc.) for LLMs.",
+  "name": "@sanchorelaxo/yt-search",
+  "version": "0.7.0",
+  "description": "An MCP server implementation that integrates with yt-dlp and YouTube search, providing video and audio content download capabilities (e.g. YouTube, Facebook, Tiktok, etc.) for LLMs.",
   "keywords": [
     "mcp",
     "youtube",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kevinwatt/yt-dlp-mcp.git"
+    "url": "https://github.com/sanchorelaxo/yt-search.git"
   },
   "bin": {
     "yt-dlp-mcp": "lib/index.mjs"
