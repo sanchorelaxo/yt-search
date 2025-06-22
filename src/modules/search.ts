@@ -127,7 +127,7 @@ export async function searchYouTube(
  * @param config - Application configuration
  * @param resolution - Video resolution preference
  * @param apiKey - YouTube Data API key
- * @returns Promise resolving to download result message
+ * @returns Promise resolving to download result message or job ID for async downloads
  * 
  * @example
  * ```typescript
@@ -155,14 +155,23 @@ export async function searchAndDownloadTop(
   const topResult = JSON.parse(searchResults)[0];
   
   try {
-    // Download the top result
+    // Download the top result (will be async if enabled in config)
     const downloadResult = await downloadVideo(topResult.url, config, resolution);
     
-    return `Successfully downloaded top search result:
+    // Check if it's an async download (contains "Job ID:")
+    if (downloadResult.includes('Job ID:')) {
+      return `Successfully started download for top search result:
 Title: ${topResult.title}
 Channel: ${topResult.channelTitle}
 URL: ${topResult.url}
 ${downloadResult}`;
+    } else {
+      return `Successfully downloaded top search result:
+Title: ${topResult.title}
+Channel: ${topResult.channelTitle}
+URL: ${topResult.url}
+${downloadResult}`;
+    }
   } catch (error) {
     throw new Error(`Failed to download top result for "${query}": ${error instanceof Error ? error.message : 'Unknown error'}`);
   }

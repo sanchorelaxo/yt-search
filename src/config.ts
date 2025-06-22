@@ -35,6 +35,7 @@ export interface Config {
     defaultResolution: "480p" | "720p" | "1080p" | "best";
     defaultAudioFormat: "m4a" | "mp3";
     defaultSubtitleLanguage: string;
+    asyncDownload: boolean;
   };
 }
 
@@ -63,7 +64,8 @@ const defaultConfig: Config = {
   download: {
     defaultResolution: "720p",
     defaultAudioFormat: "m4a",
-    defaultSubtitleLanguage: "en"
+    defaultSubtitleLanguage: "en",
+    asyncDownload: false
   }
 };
 
@@ -109,6 +111,9 @@ function loadEnvConfig(): DeepPartial<Config> {
   }
   if (process.env.YTDLP_DEFAULT_SUBTITLE_LANG) {
     downloadConfig.defaultSubtitleLanguage = process.env.YTDLP_DEFAULT_SUBTITLE_LANG;
+  }
+  if (process.env.ASYNC_DLS_ENABLED) {
+    downloadConfig.asyncDownload = process.env.ASYNC_DLS_ENABLED.toLowerCase() === 'true';
   }
   if (Object.keys(downloadConfig).length > 0) {
     envConfig.download = downloadConfig;
@@ -174,7 +179,8 @@ function mergeConfig(base: Config, override: DeepPartial<Config>): Config {
     download: {
       defaultResolution: override.download?.defaultResolution || base.download.defaultResolution,
       defaultAudioFormat: override.download?.defaultAudioFormat || base.download.defaultAudioFormat,
-      defaultSubtitleLanguage: override.download?.defaultSubtitleLanguage || base.download.defaultSubtitleLanguage
+      defaultSubtitleLanguage: override.download?.defaultSubtitleLanguage || base.download.defaultSubtitleLanguage,
+      asyncDownload: override.download?.asyncDownload || base.download.asyncDownload
     }
   };
 }

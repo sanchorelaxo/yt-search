@@ -8,6 +8,7 @@ import {
   isYouTubeUrl,
   generateRandomFilename 
 } from "./utils.js";
+import { downloadManager } from "./downloadManager.js";
 
 /**
  * Downloads a video from the specified URL.
@@ -15,16 +16,16 @@ import {
  * @param url - The URL of the video to download
  * @param config - Configuration object for download settings
  * @param resolution - Preferred video resolution ('480p', '720p', '1080p', 'best')
- * @returns Promise resolving to a success message with the downloaded file path
+ * @returns Promise resolving to a success message with the downloaded file path or job ID for async downloads
  * @throws {Error} When URL is invalid or download fails
  * 
  * @example
  * ```typescript
- * // Download with default settings
+ * // Download with default settings (sync)
  * const result = await downloadVideo('https://youtube.com/watch?v=...');
  * console.log(result);
  * 
- * // Download with specific resolution
+ * // Download with specific resolution (async if enabled)
  * const hdResult = await downloadVideo(
  *   'https://youtube.com/watch?v=...',
  *   undefined,
@@ -102,22 +103,40 @@ export async function downloadVideo(
       expectedFilename = randomFilename;
     }
     
-    // Download with progress info
-    try {
-      await _spawnPromise("yt-dlp", [
+    // Check if async download is enabled
+    if (config.download.asyncDownload) {
+      // Start background download
+      const jobId = downloadManager.generateJobId();
+      const args = [
         "--progress",
         "--newline",
         "--no-mtime",
         "-f", format,
         "--output", outputTemplate,
         url
-      ]);
-    } catch (error) {
-      throw new Error(`Download failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
+      ];
+      
+      downloadManager.startDownload(jobId, url, 'video', 'yt-dlp', args, expectedFilename);
+      
+      return `Video download started in background. Job ID: ${jobId}. Use the job ID to check download status.`;
+    } else {
+      // Download with progress info (synchronous)
+      try {
+        await _spawnPromise("yt-dlp", [
+          "--progress",
+          "--newline",
+          "--no-mtime",
+          "-f", format,
+          "--output", outputTemplate,
+          url
+        ]);
+      } catch (error) {
+        throw new Error(`Download failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
 
-    return `Video successfully downloaded as "${path.basename(expectedFilename)}" to ${userDownloadsDir}`;
+      return `Video successfully downloaded as "${path.basename(expectedFilename)}" to ${userDownloadsDir}`;
+    }
   } catch (error) {
     throw error;
   }
-} 
+}

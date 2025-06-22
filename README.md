@@ -10,7 +10,7 @@ An MCP server implementation that integrates with yt-dlp, providing video and au
 * **Video Download**: Save videos to your Downloads folder with resolution control
 * **Audio Download**: Save audios to your Downloads folder
 * **Privacy-Focused**: Direct download without tracking
-* **MCP Integration**: Works with Dive and other MCP-compatible LLMs
+* **MCP Integration**: Works with Windsurf and other MCP-compatible LLMs
 
 ## Installation
 
@@ -29,25 +29,6 @@ brew install yt-dlp
 pip install yt-dlp
 ```
 
-### With [Dive Desktop](https://github.com/OpenAgentPlatform/Dive)
-
-1. Click "+ Add MCP Server" in Dive Desktop
-2. Copy and paste this configuration:
-
-```json
-{
-  "mcpServers": {
-    "yt-dlp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "github:sanchorelaxo/yt-search"
-      ]
-    }
-  }
-}
-```
-3. Click "Save" to install the MCP server
 
 ### YouTube Search Configuration (Optional)
 
@@ -69,14 +50,15 @@ To use the YouTube search features (`search_youtube` and `search_and_download_to
         "github:sanchorelaxo/yt-search"
       ],
       "env": {
-        "YOUTUBE_API_KEY": "your-api-key-here"
+        "YOUTUBE_API_KEY": "your-api-key-here",
+        "ASYNC_DLS_ENABLED": "true"
       }
     }
   }
 }
 ```
 
-**Note**: Without the API key, only the direct download tools (using video URLs) will work. The search tools require the API key.
+**Note**: Without the API key, only the direct download tools (using video URLs) will work. The search tools require the API key. Set `ASYNC_DLS_ENABLED` to `"false"` for synchronous downloads.
 
 ## Tool Documentation
 
@@ -123,7 +105,8 @@ To use the YouTube search features (`search_youtube` and `search_and_download_to
 ## Usage Examples
 
 Ask your LLM to:
-```
+```markdown
+"Check the status of all my downloads"
 "List available subtitles for this video: https://youtube.com/watch?v=..."
 "Download a video from facebook: https://facebook.com/..."
 "Download Chinese subtitles from this video: https://youtube.com/watch?v=..."
@@ -151,6 +134,7 @@ npx github:sanchorelaxo/yt-search
 
 ## Documentation
 
+- [Getting Google API Key](./docs/google-api-setup.md)
 - [API Reference](./docs/api.md)
 - [Configuration](./docs/configuration.md)
 - [Error Handling](./docs/error-handling.md)
@@ -164,3 +148,4 @@ MIT
 ## Author
 
 Dewei Yen
+(forked by Roger Sanche)

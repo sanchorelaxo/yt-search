@@ -17,6 +17,7 @@ import { downloadVideo } from "./modules/video.js";
 import { downloadAudio } from "./modules/audio.js";
 import { listSubtitles, downloadSubtitles, downloadTranscript } from "./modules/subtitle.js";
 import { searchYouTube, searchAndDownloadTop } from "./modules/search.js";
+import { downloadManager } from "./modules/downloadManager.js";
 
 const VERSION = '0.6.26';
 
@@ -189,6 +190,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["query"],
         },
       },
+      {
+        name: "check_downloads",
+        description: "Check the status of all current downloads (active, completed, and failed).",
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: [],
+        },
+      },
     ],
   };
 });
@@ -280,6 +290,11 @@ server.setRequestHandler(
       return handleToolExecution(
         () => searchAndDownloadTop(args.query!, CONFIG, args.resolution as "480p" | "720p" | "1080p" | "best", process.env.YOUTUBE_API_KEY),
         "Error searching and downloading top result"
+      );
+    } else if (toolName === "check_downloads") {
+      return handleToolExecution(
+        () => downloadManager.checkDownloads(),
+        "Error checking downloads"
       );
     } else {
       return {
