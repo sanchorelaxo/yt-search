@@ -16,6 +16,7 @@ import { _spawnPromise, safeCleanup } from "./modules/utils.js";
 import { downloadVideo } from "./modules/video.js";
 import { downloadAudio } from "./modules/audio.js";
 import { listSubtitles, downloadSubtitles, downloadTranscript } from "./modules/subtitle.js";
+import { searchYouTube, searchAndDownloadTop } from "./modules/search.js";
 
 const VERSION = '0.6.26';
 
@@ -160,6 +161,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["url"],
         },
       },
+      {
+        name: "search_youtube",
+        description: "Search YouTube videos and return the top 12 results with video details.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Search query string" },
+            maxResults: { type: "number", description: "Maximum number of results to return (1-50, default: 12)" },
+          },
+          required: ["query"],
+        },
+      },
+      {
+        name: "search_and_download_top",
+        description: "Search YouTube and immediately download the video (with audio) of the top result.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Search query string" },
+            resolution: { 
+              type: "string", 
+              description: "Preferred video resolution ('480p', '720p', '1080p', 'best'). Defaults to '720p'",
+              enum: ["480p", "720p", "1080p", "best"]
+            },
+          },
+          required: ["query"],
+        },
+      },
     ],
   };
 });
@@ -201,6 +230,8 @@ server.setRequestHandler(
       url: string;
       language?: string;
       resolution?: string;
+      query?: string;
+      maxResults?: number;
     };
 
     if (toolName === "list_subtitle_languages") {
@@ -227,6 +258,28 @@ server.setRequestHandler(
       return handleToolExecution(
         () => downloadTranscript(args.url, args.language || CONFIG.download.defaultSubtitleLanguage, CONFIG),
         "Error downloading transcript"
+      );
+    } else if (toolName === "search_youtube") {
+      if (!args.query) {
+        return {
+          content: [{ type: "text", text: "Error: query parameter is required" }],
+          isError: true
+        };
+      }
+      return handleToolExecution(
+        () => searchYouTube(args.query!, args.maxResults, process.env.YOUTUBE_API_KEY),
+        "Error searching YouTube"
+      );
+    } else if (toolName === "search_and_download_top") {
+      if (!args.query) {
+        return {
+          content: [{ type: "text", text: "Error: query parameter is required" }],
+          isError: true
+        };
+      }
+      return handleToolExecution(
+        () => searchAndDownloadTop(args.query!, CONFIG, args.resolution as "480p" | "720p" | "1080p" | "best", process.env.YOUTUBE_API_KEY),
+        "Error searching and downloading top result"
       );
     } else {
       return {

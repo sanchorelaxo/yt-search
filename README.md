@@ -4,6 +4,8 @@ An MCP server implementation that integrates with yt-dlp, providing video and au
 
 ## Features
 
+* **YouTube Search**: Search YouTube videos and get detailed results
+* **Quick Download**: Search and immediately download the top video result
 * **Subtitles**: Download subtitles in SRT format for LLMs to read
 * **Video Download**: Save videos to your Downloads folder with resolution control
 * **Audio Download**: Save audios to your Downloads folder
@@ -47,7 +49,48 @@ pip install yt-dlp
 ```
 3. Click "Save" to install the MCP server
 
+### YouTube Search Configuration (Optional)
+
+To use the YouTube search features (`search_youtube` and `search_and_download_top`), you need a YouTube Data API key:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the YouTube Data API v3
+4. Create credentials (API key)
+5. Add the API key to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "yt-dlp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@kevinwatt/yt-dlp-mcp"
+      ],
+      "env": {
+        "YOUTUBE_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+**Note**: Without the API key, only the direct download tools (using video URLs) will work. The search tools require the API key.
+
 ## Tool Documentation
+
+* **search_youtube**
+  * Search YouTube videos and return the top 12 results with video details
+  * Inputs:
+    * `query` (string, required): Search query string
+    * `maxResults` (number, optional): Maximum number of results to return (1-50, default: 12)
+
+* **search_and_download_top**
+  * Search YouTube and immediately download the video (with audio) of the top result
+  * Inputs:
+    * `query` (string, required): Search query string
+    * `resolution` (string, optional): Video resolution ('480p', '720p', '1080p', 'best'). Defaults to '720p'
 
 * **list_subtitle_languages**
   * List all available subtitle languages and their formats for a video (including auto-generated captions)
@@ -88,6 +131,8 @@ Ask your LLM to:
 "Download audio from this YouTube video: https://youtube.com/watch?v=..."
 "Get a clean transcript of this video: https://youtube.com/watch?v=..."
 "Download Spanish transcript from this video: https://youtube.com/watch?v=..."
+"Search YouTube for videos about AI: AI"
+"Search YouTube for videos about AI and download the top result in 1080p: AI, 1080p"
 ```
 
 ## Manual Start
@@ -119,5 +164,3 @@ MIT
 ## Author
 
 Dewei Yen
-
-
