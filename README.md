@@ -16,8 +16,9 @@ An MCP server implementation that integrates with yt-dlp, providing video and au
 
 ### Prerequisites
 
-Install `yt-dlp` based on your operating system:
+Install `yt-dlp` and `ffmpeg` based on your operating system:
 
+**yt-dlp:**
 ```bash
 # Windows
 winget install yt-dlp
@@ -29,6 +30,20 @@ brew install yt-dlp
 pip install yt-dlp
 ```
 
+**ffmpeg (required for video processing and speedy downloads):**
+```bash
+# Windows
+winget install ffmpeg
+
+# macOS
+brew install ffmpeg
+
+# Linux (Ubuntu/Debian)
+sudo apt update && sudo apt install ffmpeg
+
+# Linux (CentOS/RHEL/Fedora)
+sudo dnf install ffmpeg
+```
 
 ### YouTube Search Configuration (Optional)
 
@@ -91,6 +106,13 @@ To use the YouTube search features (`search_youtube` and `search_and_download_to
     * `url` (string, required): URL of the video
     * `resolution` (string, optional): Video resolution ('480p', '720p', '1080p', 'best'). Defaults to '720p'
 
+* **download_speedy**
+  * Download video and speed it up using ffmpeg. Downloads video and audio separately, merges them, then applies speed adjustment. The original video is not kept, only the sped-up version.
+  * Inputs:
+    * `url` (string, required): URL of the video
+    * `speedMultiplier` (number, required): Speed multiplier (e.g., 2 for 2x speed, 1.5 for 1.5x speed). Must be between 0.1 and 10.
+    * `resolution` (string, optional): Video resolution ('480p', '720p', '1080p', 'best'). Defaults to '720p'
+
 * **download_audio**
   * Download audio in best available quality (usually m4a/mp3 format) to user's Downloads folder
   * Inputs:
@@ -111,6 +133,9 @@ Ask your LLM to:
 "Download a video from facebook: https://facebook.com/..."
 "Download Chinese subtitles from this video: https://youtube.com/watch?v=..."
 "Download this video in 1080p: https://youtube.com/watch?v=..."
+"Download this video and speed it up by 2x: https://youtube.com/watch?v=..."
+"Download this video in 720p and accelerate it by 3x: https://youtube.com/watch?v=..."
+"Speed up this video by 1.5x: https://youtube.com/watch?v=..."
 "Download audio from this YouTube video: https://youtube.com/watch?v=..."
 "Get a clean transcript of this video: https://youtube.com/watch?v=..."
 "Download Spanish transcript from this video: https://youtube.com/watch?v=..."
@@ -129,6 +154,7 @@ npx github:sanchorelaxo/yt-search
 
 * Node.js 20+
 * `yt-dlp` in system PATH
+* `ffmpeg` in system PATH
 * MCP-compatible LLM service
 
 
@@ -139,7 +165,7 @@ npx github:sanchorelaxo/yt-search
 - [Configuration](./docs/configuration.md)
 - [Error Handling](./docs/error-handling.md)
 - [Contributing](./docs/contributing.md)
-
+- [FFmpeg Setup and Troubleshooting](./docs/ffmpeg-setup.md)
 
 ## License
 

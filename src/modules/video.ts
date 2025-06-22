@@ -140,3 +140,128 @@ export async function downloadVideo(
     throw error;
   }
 }
+
+/**
+ * Downloads a video and speeds it up using ffmpeg.
+ * 
+ * @param url - The URL of the video to download
+ * @param config - Configuration object for download settings
+ * @param resolution - Preferred video resolution ('480p', '720p', '1080p', 'best')
+ * @param speedMultiplier - Speed multiplier (e.g., 2 for 2x speed)
+ * @returns Promise resolving to a success message
+ * @throws {Error} When URL is invalid or download fails
+ */
+export async function downloadSpeedyVideo(
+  url: string,
+  config: Config,
+  resolution: "480p" | "720p" | "1080p" | "best" = "720p",
+  speedMultiplier: number = 2
+): Promise<string> {
+  const userDownloadsDir = config.file.downloadsDir;
+  
+  try {
+    validateUrl(url);
+    
+    if (speedMultiplier <= 0 || speedMultiplier > 10) {
+      throw new Error("Speed multiplier must be between 0.1 and 10");
+    }
+    
+    const timestamp = getFormattedTimestamp();
+    const baseFilename = generateRandomFilename();
+      
+    let videoFormat: string;
+    let audioFormat: string = "bestaudio";
+    
+    if (isYouTubeUrl(url)) {
+      // YouTube-specific format selection for video only
+      switch (resolution) {
+        case "480p":
+          videoFormat = "best[height<=480]";
+          break;
+        case "720p":
+          videoFormat = "best[height<=720]/best[height<=480]";
+          break;
+        case "1080p":
+          videoFormat = "best[height<=1080]/best[height<=720]/best[height<=480]";
+          break;
+        case "best":
+          videoFormat = "bestvideo";
+          break;
+        default:
+          videoFormat = "best[height<=720]/best[height<=480]";
+      }
+    } else {
+      // For non-YouTube URLs, try to get best available
+      videoFormat = "bestvideo";
+    }
+
+    // Download video and audio separately, then merge and speed up
+    const videoFile = path.join(userDownloadsDir, `${baseFilename}_${timestamp}_video.%(ext)s`);
+    const audioFile = path.join(userDownloadsDir, `${baseFilename}_${timestamp}_audio.%(ext)s`);
+    const mergedFile = path.join(userDownloadsDir, `${baseFilename}_${timestamp}_merged.mp4`);
+    const speedyFile = path.join(userDownloadsDir, `${baseFilename}_${timestamp}_speedy_${speedMultiplier}x.mp4`);
+    
+    try {
+      // Download video stream
+      await _spawnPromise("yt-dlp", [
+        "--format", videoFormat,
+        "--output", videoFile,
+        url
+      ]);
+
+      // Download audio stream
+      await _spawnPromise("yt-dlp", [
+        "--format", audioFormat,
+        "--output", audioFile,
+        url
+      ]);
+
+      // Find the actual downloaded files
+      const fs = await import('fs');
+      const files = fs.readdirSync(userDownloadsDir);
+      
+      const videoFiles = files.filter(f => f.includes(baseFilename) && f.includes('video'));
+      const audioFiles = files.filter(f => f.includes(baseFilename) && f.includes('audio'));
+      
+      if (videoFiles.length === 0) {
+        throw new Error("Video file not found after download");
+      }
+      if (audioFiles.length === 0) {
+        throw new Error("Audio file not found after download");
+      }
+      
+      const actualVideoFile = path.join(userDownloadsDir, videoFiles[0]);
+      const actualAudioFile = path.join(userDownloadsDir, audioFiles[0]);
+      
+      // Merge video and audio with ffmpeg
+      await _spawnPromise('ffmpeg', [
+        '-i', actualVideoFile,
+        '-i', actualAudioFile,
+        '-c:v', 'copy',
+        '-c:a', 'aac',
+        '-y', // Overwrite output file
+        mergedFile
+      ]);
+      
+      // Speed up the merged video
+      await _spawnPromise('ffmpeg', [
+        '-i', mergedFile,
+        '-filter:v', `setpts=${1/speedMultiplier}*PTS`,
+        '-filter:a', `atempo=${speedMultiplier}`,
+        '-y', // Overwrite output file
+        speedyFile
+      ]);
+
+      // Clean up intermediate files
+      fs.unlinkSync(actualVideoFile);
+      fs.unlinkSync(actualAudioFile);
+      fs.unlinkSync(mergedFile);
+
+      return `Speedy video successfully created as "${path.basename(speedyFile)}" (${speedMultiplier}x speed) in ${userDownloadsDir}`;
+    } catch (error) {
+      throw new Error(`Speedy download failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } catch (error) {
+    throw error;
+  }
+}

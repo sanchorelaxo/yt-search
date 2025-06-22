@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { CONFIG } from "./config.js";
 import { _spawnPromise, safeCleanup } from "./modules/utils.js";
-import { downloadVideo } from "./modules/video.js";
+import { downloadVideo, downloadSpeedyVideo } from "./modules/video.js";
 import { downloadAudio } from "./modules/audio.js";
 import { listSubtitles, downloadSubtitles, downloadTranscript } from "./modules/subtitle.js";
 import { searchYouTube, searchAndDownloadTop } from "./modules/search.js";
@@ -191,6 +191,28 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "download_speedy",
+        description: "Download video and speed it up using ffmpeg. The original video is not kept, only the sped-up version.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            url: { type: "string", description: "URL of the video" },
+            resolution: { 
+              type: "string", 
+              description: "Preferred video resolution ('480p', '720p', '1080p', 'best'). Defaults to '720p'",
+              enum: ["480p", "720p", "1080p", "best"]
+            },
+            speedMultiplier: { 
+              type: "number", 
+              description: "Speed multiplier (e.g., 2 for 2x speed, 1.5 for 1.5x speed). Must be greater than 0.",
+              minimum: 0.1,
+              maximum: 10
+            },
+          },
+          required: ["url", "speedMultiplier"],
+        },
+      },
+      {
         name: "check_downloads",
         description: "Check the status of all current downloads (active, completed, and failed).",
         inputSchema: {
@@ -242,6 +264,7 @@ server.setRequestHandler(
       resolution?: string;
       query?: string;
       maxResults?: number;
+      speedMultiplier?: number;
     };
 
     if (toolName === "list_subtitle_languages") {
@@ -290,6 +313,17 @@ server.setRequestHandler(
       return handleToolExecution(
         () => searchAndDownloadTop(args.query!, CONFIG, args.resolution as "480p" | "720p" | "1080p" | "best", process.env.YOUTUBE_API_KEY),
         "Error searching and downloading top result"
+      );
+    } else if (toolName === "download_speedy") {
+      if (!args.url || !args.speedMultiplier) {
+        return {
+          content: [{ type: "text", text: "Error: url and speedMultiplier parameters are required" }],
+          isError: true
+        };
+      }
+      return handleToolExecution(
+        () => downloadSpeedyVideo(args.url, CONFIG, args.resolution as "480p" | "720p" | "1080p" | "best", args.speedMultiplier),
+        "Error downloading speedy video"
       );
     } else if (toolName === "check_downloads") {
       return handleToolExecution(
