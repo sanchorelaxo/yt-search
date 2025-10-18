@@ -117,6 +117,13 @@ To use the YouTube search features (`search_youtube` and `search_and_download_to
     * `speedMultiplier` (number, required): Speed multiplier (e.g., 2 for 2x speed, 1.5 for 1.5x speed). Must be between 0.1 and 10.
     * `resolution` (string, optional): Video resolution ('480p', '720p', '1080p', 'best'). Defaults to '720p'
 
+* **download_clip**
+  * Download a time-sliced clip from a video in the highest available resolution using ffmpeg
+  * Inputs:
+    * `url` (string, required): URL of the video
+    * `startTime` (string, required): Start time (e.g., '30', '1m30s', '1h2m30s')
+    * `endTime` (string, required): End time (e.g., '90', '2m45s', '1h5m')
+
 * **download_audio**
   * Download audio in best available quality (usually m4a/mp3 format) to user's Downloads folder
   * Inputs:
