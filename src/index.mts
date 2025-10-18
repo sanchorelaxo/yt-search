@@ -56,7 +56,7 @@ async function validateConfig(): Promise<void> {
 async function checkDependencies(): Promise<void> {
   for (const tool of CONFIG.tools.required) {
     try {
-      await _spawnPromise(tool, ["--version"]);
+      await _spawnPromise(CONFIG.tools.ytDlpPath, ["--version"]);
     } catch (error) {
       throw new Error(`Required tool '${tool}' is not installed or not accessible`);
     }
@@ -269,7 +269,7 @@ server.setRequestHandler(
 
     if (toolName === "list_subtitle_languages") {
       return handleToolExecution(
-        () => listSubtitles(args.url),
+        () => listSubtitles(args.url, CONFIG),
         "Error listing subtitle languages"
       );
     } else if (toolName === "download_video_subtitles") {

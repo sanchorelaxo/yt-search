@@ -89,7 +89,7 @@ export async function downloadVideo(
         sanitizeFilename(`%(title)s [%(id)s] ${timestamp}`, config.file) + '.%(ext)s'
       );
       
-      expectedFilename = await _spawnPromise("yt-dlp", [
+      expectedFilename = await _spawnPromise(config.tools.ytDlpPath, [
         "--get-filename",
         "-f", format,
         "--output", outputTemplate,
@@ -116,13 +116,13 @@ export async function downloadVideo(
         url
       ];
       
-      downloadManager.startDownload(jobId, url, 'video', 'yt-dlp', args, expectedFilename);
+      downloadManager.startDownload(jobId, url, 'video', config.tools.ytDlpPath, args, expectedFilename);
       
       return `Video download started in background. Job ID: ${jobId}. Use the job ID to check download status.`;
     } else {
       // Download with progress info (synchronous)
       try {
-        await _spawnPromise("yt-dlp", [
+        await _spawnPromise(config.tools.ytDlpPath, [
           "--progress",
           "--newline",
           "--no-mtime",
@@ -203,14 +203,14 @@ export async function downloadSpeedyVideo(
     
     try {
       // Download video stream
-      await _spawnPromise("yt-dlp", [
+      await _spawnPromise(config.tools.ytDlpPath, [
         "--format", videoFormat,
         "--output", videoFile,
         url
       ]);
 
       // Download audio stream
-      await _spawnPromise("yt-dlp", [
+      await _spawnPromise(config.tools.ytDlpPath, [
         "--format", audioFormat,
         "--output", audioFile,
         url

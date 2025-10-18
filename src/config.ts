@@ -29,6 +29,7 @@ export interface Config {
   // 工具相關配置
   tools: {
     required: readonly string[];
+    ytDlpPath: string;
   };
   // 下載相關配置
   download: {
@@ -59,7 +60,8 @@ const defaultConfig: Config = {
     }
   },
   tools: {
-    required: ['yt-dlp']
+    required: ['yt-dlp'],
+    ytDlpPath: 'yt-dlp'
   },
   download: {
     defaultResolution: "720p",
@@ -119,6 +121,15 @@ function loadEnvConfig(): DeepPartial<Config> {
     envConfig.download = downloadConfig;
   }
 
+  // 工具配置
+  const toolsConfig: Partial<Config['tools']> = {};
+  if (process.env.YTDLP_PATH) {
+    toolsConfig.ytDlpPath = process.env.YTDLP_PATH;
+  }
+  if (Object.keys(toolsConfig).length > 0) {
+    envConfig.tools = toolsConfig;
+  }
+
   return envConfig;
 }
 
@@ -174,7 +185,8 @@ function mergeConfig(base: Config, override: DeepPartial<Config>): Config {
       }
     },
     tools: {
-      required: (override.tools?.required || base.tools.required) as readonly string[]
+      required: (override.tools?.required || base.tools.required) as readonly string[],
+      ytDlpPath: override.tools?.ytDlpPath || base.tools.ytDlpPath
     },
     download: {
       defaultResolution: override.download?.defaultResolution || base.download.defaultResolution,

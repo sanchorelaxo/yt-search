@@ -21,13 +21,13 @@ import { _spawnPromise, validateUrl, cleanSubtitleToTranscript } from "./utils.j
  * }
  * ```
  */
-export async function listSubtitles(url: string): Promise<string> {
+export async function listSubtitles(url: string, config: Config): Promise<string> {
   if (!validateUrl(url)) {
     throw new Error('Invalid or unsupported URL format');
   }
 
   try {
-    const output = await _spawnPromise('yt-dlp', [
+    const output = await _spawnPromise(config.tools.ytDlpPath, [
       '--list-subs',
       '--write-auto-sub',
       '--skip-download',
@@ -80,7 +80,7 @@ export async function downloadSubtitles(
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), config.file.tempDirPrefix));
 
   try {
-    await _spawnPromise('yt-dlp', [
+    await _spawnPromise(config.tools.ytDlpPath, [
       '--write-sub',
       '--write-auto-sub',
       '--sub-lang', language,
@@ -138,7 +138,7 @@ export async function downloadTranscript(
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), config.file.tempDirPrefix));
 
   try {
-    await _spawnPromise('yt-dlp', [
+    await _spawnPromise(config.tools.ytDlpPath, [
       '--skip-download',
       '--write-subs',
       '--write-auto-subs',

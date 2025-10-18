@@ -58,12 +58,12 @@ export async function downloadAudio(url: string, config: Config): Promise<string
         url
       ];
       
-      downloadManager.startDownload(jobId, url, 'audio', 'yt-dlp', args, outputTemplate);
+      downloadManager.startDownload(jobId, url, 'audio', config.tools.ytDlpPath, args, outputTemplate);
       
       return `Audio download started in background. Job ID: ${jobId}. Use the job ID to check download status.`;
     } else {
       // Synchronous download
-      await _spawnPromise("yt-dlp", [
+      await _spawnPromise(config.tools.ytDlpPath, [
         "--verbose",
         "--progress",
         "--newline",
