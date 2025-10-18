@@ -66,14 +66,18 @@ To use the YouTube search features (`search_youtube` and `search_and_download_to
       ],
       "env": {
         "YOUTUBE_API_KEY": "your-api-key-here",
-        "ASYNC_DLS_ENABLED": "true"
+        "ASYNC_DLS_ENABLED": "true",
+        "YTDLP_PATH": "yt-dlp"
       }
     }
   }
 }
 ```
 
-**Note**: Without the API key, only the direct download tools (using video URLs) will work. The search tools require the API key. Set `ASYNC_DLS_ENABLED` to `"false"` for synchronous downloads.
+**Configuration Notes**:
+- `YOUTUBE_API_KEY`: Required for search tools. Without it, only direct download tools (using video URLs) will work.
+- `ASYNC_DLS_ENABLED`: Set to `"false"` for synchronous downloads (default: `"true"` for async).
+- `YTDLP_PATH`: Optional. Specify the full path to yt-dlp binary if it's not in your system PATH (e.g., `/home/user/.local/pipx/venvs/yt-dlp/bin/yt-dlp`). Defaults to `"yt-dlp"`.
 
 ## Tool Documentation
 
