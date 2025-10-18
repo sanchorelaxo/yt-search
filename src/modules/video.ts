@@ -265,3 +265,106 @@ export async function downloadSpeedyVideo(
     throw error;
   }
 }
+
+/**
+ * Downloads a clip (time slice) from a video in the highest available resolution.
+ * 
+ * @param url - The URL of the video to download
+ * @param config - Configuration object for download settings
+ * @param startTime - Start time in seconds or YouTube format (e.g., "1m30s", "90")
+ * @param endTime - End time in seconds or YouTube format (e.g., "2m45s", "165")
+ * @returns Promise resolving to a success message
+ * @throws {Error} When URL is invalid, time format is invalid, or download fails
+ */
+export async function downloadClip(
+  url: string,
+  config: Config,
+  startTime: string,
+  endTime: string
+): Promise<string> {
+  const userDownloadsDir = config.file.downloadsDir;
+  
+  try {
+    validateUrl(url);
+    
+    // Convert time format to seconds
+    const parseTime = (timeStr: string): number => {
+      const trimmed = timeStr.trim();
+      
+      // Handle format like "1m30s"
+      const timeRegex = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s?)?$/;
+      const match = trimmed.match(timeRegex);
+      
+      if (match) {
+        const hours = parseInt(match[1] || '0');
+        const minutes = parseInt(match[2] || '0');
+        const seconds = parseFloat(match[3] || '0');
+        return hours * 3600 + minutes * 60 + seconds;
+      }
+      
+      // Handle plain number (seconds)
+      const num = parseFloat(trimmed);
+      if (!isNaN(num)) {
+        return num;
+      }
+      
+      throw new Error(`Invalid time format: ${timeStr}. Use format like "1m30s", "90", or "1h2m30s"`);
+    };
+    
+    const startSeconds = parseTime(startTime);
+    const endSeconds = parseTime(endTime);
+    
+    if (startSeconds >= endSeconds) {
+      throw new Error("Start time must be before end time");
+    }
+    
+    const duration = endSeconds - startSeconds;
+    const timestamp = getFormattedTimestamp();
+    const baseFilename = generateRandomFilename();
+    
+    // Download highest resolution video
+    const videoFormat = "bestvideo+bestaudio/best";
+    const videoFile = path.join(userDownloadsDir, `${baseFilename}_${timestamp}_full.%(ext)s`);
+    const clipFile = path.join(userDownloadsDir, `${baseFilename}_${timestamp}_clip_${Math.floor(startSeconds)}-${Math.floor(endSeconds)}.mp4`);
+    
+    try {
+      // Download full video
+      await _spawnPromise(config.tools.ytDlpPath, [
+        "--format", videoFormat,
+        "--output", videoFile,
+        url
+      ]);
+      
+      // Find the actual downloaded file
+      const fs = await import('fs');
+      const files = fs.readdirSync(userDownloadsDir);
+      const videoFiles = files.filter(f => f.includes(baseFilename) && f.includes('full'));
+      
+      if (videoFiles.length === 0) {
+        throw new Error("Video file not found after download");
+      }
+      
+      const actualVideoFile = path.join(userDownloadsDir, videoFiles[0]);
+      
+      // Extract clip using ffmpeg
+      await _spawnPromise('ffmpeg', [
+        '-i', actualVideoFile,
+        '-ss', String(startSeconds),
+        '-to', String(endSeconds),
+        '-c:v', 'copy',
+        '-c:a', 'aac',
+        '-y', // Overwrite output file
+        clipFile
+      ]);
+      
+      // Clean up full video file
+      fs.unlinkSync(actualVideoFile);
+      
+      return `Clip successfully extracted as "${path.basename(clipFile)}" (${Math.floor(duration)}s) in ${userDownloadsDir}`;
+    } catch (error) {
+      throw new Error(`Clip extraction failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } catch (error) {
+    throw error;
+  }
+}

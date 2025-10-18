@@ -13,7 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { CONFIG } from "./config.js";
 import { _spawnPromise, safeCleanup } from "./modules/utils.js";
-import { downloadVideo, downloadSpeedyVideo } from "./modules/video.js";
+import { downloadVideo, downloadSpeedyVideo, downloadClip } from "./modules/video.js";
 import { downloadAudio } from "./modules/audio.js";
 import { listSubtitles, downloadSubtitles, downloadTranscript } from "./modules/subtitle.js";
 import { searchYouTube, searchAndDownloadTop } from "./modules/search.js";
@@ -213,6 +213,19 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
+        name: "download_clip",
+        description: "Download a time-sliced clip from a video in the highest available resolution using ffmpeg.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            url: { type: "string", description: "URL of the video" },
+            startTime: { type: "string", description: "Start time (e.g., '1m30s', '90', '1h2m30s')" },
+            endTime: { type: "string", description: "End time (e.g., '2m45s', '165', '1h5m')" },
+          },
+          required: ["url", "startTime", "endTime"],
+        },
+      },
+      {
         name: "check_downloads",
         description: "Check the status of all current downloads (active, completed, and failed).",
         inputSchema: {
@@ -265,6 +278,8 @@ server.setRequestHandler(
       query?: string;
       maxResults?: number;
       speedMultiplier?: number;
+      startTime?: string;
+      endTime?: string;
     };
 
     if (toolName === "list_subtitle_languages") {
@@ -324,6 +339,17 @@ server.setRequestHandler(
       return handleToolExecution(
         () => downloadSpeedyVideo(args.url, CONFIG, args.resolution as "480p" | "720p" | "1080p" | "best", args.speedMultiplier),
         "Error downloading speedy video"
+      );
+    } else if (toolName === "download_clip") {
+      if (!args.url || !args.startTime || !args.endTime) {
+        return {
+          content: [{ type: "text", text: "Error: url, startTime, and endTime parameters are required" }],
+          isError: true
+        };
+      }
+      return handleToolExecution(
+        () => downloadClip(args.url, CONFIG, args.startTime!, args.endTime!),
+        "Error downloading clip"
       );
     } else if (toolName === "check_downloads") {
       return handleToolExecution(
